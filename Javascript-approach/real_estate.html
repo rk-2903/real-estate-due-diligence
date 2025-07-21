@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Land Subdivision Planner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 0;
+            min-height: 80vh;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .control-group h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #planCanvas {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            cursor: crosshair;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stats {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .stats h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .instructions h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #dee2e6;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Land Subdivision Planner</h1>
+            <p>Professional land development with pipeline exclusion and optimal plot layout</p>
+        </div>
+
+        <div class="main-content">
+            <div class="controls">
+                <div class="instructions">
+                    <h4>📋 Instructions</h4>
+                    <ul>
+                        <li>Click and drag to draw the land boundary</li>
+                        <li>Switch to "Pipeline" mode to mark exclusion zones</li>
+                        <li>Switch to "Pond" mode to mark water areas</li>
+                        <li>Click "Generate Subdivision" to create optimal layout</li>
+                    </ul>
+                </div>
+
+                <div class="control-group">
+                    <h3>🗺️ Land Coordinates</h3>
+                    <div class="form-row">
+                        <div>
+                            <label>North Latitude:</label>
+                            <input type="number" id="northLat" value="32.7767" step="0.0001">
+                        </div>
+                        <div>
+                            <label>South Latitude:</label>
+                            <input type="number" id="southLat" value="32.7700" step="0.0001">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>East Longitude:</label>
+                            <input type="number" id="eastLng" value="-97.7900" step="0.0001">
+                        </div>
+                        <div>
+                            <label>West Longitude:</label>
+                            <input type="number" id="westLng" value="-97.8000" step="0.0001">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>📐 Plot Specifications</h3>
+                    <div class="form-row">
+                        <div>
+                            <label>Base Plot Width (ft):</label>
+                            <input type="number" id="plotWidth" value="60" min="40" max="150">
+                        </div>
+                        <div>
+                            <label>Base Plot Depth (ft):</label>
+                            <input type="number" id="plotDepth" value="120" min="80" max="200">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Road Width (ft):</label>
+                            <input type="number" id="roadWidth" value="30" min="20" max="50">
+                        </div>
+                        <div>
+                            <label>Setback (ft):</label>
+                            <input type="number" id="setback" value="10" min="5" max="25">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🏠 Residential Plot Configuration</h3>
+                    <div class="form-row">
+                        <div>
+                            <label>Plots per Row:</label>
+                            <input type="number" id="plotsPerRow" value="3" min="1" max="5">
+                        </div>
+                        <div>
+                            <label>Plot Rows:</label>
+                            <input type="number" id="plotRows" value="2" min="1" max="4">
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-radius: 5px; font-size: 12px;">
+                        <strong>Residential Plot Size:</strong> <span id="residentialPlotInfo">180 × 240 ft (6 base plots)</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>🎨 Drawing Mode</h3>
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" onclick="setMode('boundary')">Land Boundary</button>
+                        <button class="mode-btn" onclick="setMode('pipeline')">Pipeline/Exclusion</button>
+                        <button class="mode-btn" onclick="setMode('pond')">Pond/Water</button>
+                    </div>
+                    <button onclick="clearCanvas()">🗑️ Clear All</button>
+                    <button onclick="generateSubdivision()">🏘️ Generate Subdivision</button>
+                </div>
+
+                <div class="stats">
+                    <h4>📊 Project Statistics</h4>
+                    <div class="stat-item">
+                        <span>Total Land Area:</span>
+                        <span id="totalArea">0 acres</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Usable Area:</span>
+                        <span id="usableArea">0 acres</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Total Plots:</span>
+                        <span id="totalPlots">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Road Area:</span>
+                        <span id="roadArea">0 acres</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Efficiency:</span>
+                        <span id="efficiency">0%</span>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(34, 139, 34, 0.3); border-color: #228B22;"></div>
+                        <span>Land Boundary</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(255, 0, 0, 0.3); border-color: #FF0000;"></div>
+                        <span>Pipeline/Exclusion</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(0, 100, 255, 0.3); border-color: #0064FF;"></div>
+                        <span>Pond/Water</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #FFD700; border-color: #DAA520;"></div>
+                        <span>Residential Plots</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #808080; border-color: #696969;"></div>
+                        <span>Roads</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="planCanvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('planCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let currentMode = 'boundary';
+        let isDrawing = false;
+        let landBoundary = [];
+        let pipelineAreas = [];
+        let pondAreas = [];
+        let currentPath = [];
+        let plots = [];
+        let roads = [];
+        
+        // Initialize canvas
+        drawGrid();
+        
+        // Event listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        // Add event listeners for plot configuration updates
+        document.getElementById('plotsPerRow').addEventListener('input', updateResidentialPlotInfo);
+        document.getElementById('plotRows').addEventListener('input', updateResidentialPlotInfo);
+        document.getElementById('plotWidth').addEventListener('input', updateResidentialPlotInfo);
+        document.getElementById('plotDepth').addEventListener('input', updateResidentialPlotInfo);
+        
+        // Initialize residential plot info
+        updateResidentialPlotInfo();
+        
+        // Coordinate conversion functions
+        function latLngToPixel(lat, lng) {
+            const northLat = parseFloat(document.getElementById('northLat').value);
+            const southLat = parseFloat(document.getElementById('southLat').value);
+            const eastLng = parseFloat(document.getElementById('eastLng').value);
+            const westLng = parseFloat(document.getElementById('westLng').value);
+            
+            const x = ((lng - westLng) / (eastLng - westLng)) * canvas.width;
+            const y = ((northLat - lat) / (northLat - southLat)) * canvas.height;
+            
+            return {x, y};
+        }
+        
+        function pixelToLatLng(x, y) {
+            const northLat = parseFloat(document.getElementById('northLat').value);
+            const southLat = parseFloat(document.getElementById('southLat').value);
+            const eastLng = parseFloat(document.getElementById('eastLng').value);
+            const westLng = parseFloat(document.getElementById('westLng').value);
+            
+            const lng = westLng + (x / canvas.width) * (eastLng - westLng);
+            const lat = northLat - (y / canvas.height) * (northLat - southLat);
+            
+            return {lat, lng};
+        }
+        
+        function feetToPixels(feet) {
+            // Approximate conversion: 1 degree latitude ≈ 364,000 feet
+            const northLat = parseFloat(document.getElementById('northLat').value);
+            const southLat = parseFloat(document.getElementById('southLat').value);
+            const latRange = northLat - southLat;
+            const pixelsPerFoot = canvas.height / (latRange * 364000);
+            return feet * pixelsPerFoot;
+        }
+        
+        function pixelsToFeet(pixels) {
+            const northLat = parseFloat(document.getElementById('northLat').value);
+            const southLat = parseFloat(document.getElementById('southLat').value);
+            const latRange = northLat - southLat;
+            const feetPerPixel = (latRange * 364000) / canvas.height;
+            return pixels * feetPerPixel;
+        }
+        
+        function pixelsToAcres(pixels) {
+            const feetSquared = pixelsToFeet(Math.sqrt(pixels)) ** 2;
+            return feetSquared / 43560; // 1 acre = 43,560 square feet
+        }
+        
+        function updateResidentialPlotInfo() {
+            const baseWidth = parseInt(document.getElementById('plotWidth').value);
+            const baseDepth = parseInt(document.getElementById('plotDepth').value);
+            const plotsPerRow = parseInt(document.getElementById('plotsPerRow').value);
+            const plotRows = parseInt(document.getElementById('plotRows').value);
+            
+            const residentialWidth = baseWidth * plotsPerRow;
+            const residentialDepth = baseDepth * plotRows;
+            const totalBasePlots = plotsPerRow * plotRows;
+            
+            document.getElementById('residentialPlotInfo').textContent = 
+                `${residentialWidth} × ${residentialDepth} ft (${totalBasePlots} base plots)`;
+        }
+        
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            landBoundary = [];
+            pipelineAreas = [];
+            pondAreas = [];
+            plots = [];
+            roads = [];
+            currentPath = [];
+            updateStats();
+            drawGrid();
+        }
+        
+        function drawGrid() {
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            // Draw grid lines
+            for (let i = 0; i <= canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            currentPath = [];
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            currentPath.push({x, y});
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            currentPath.push({x, y});
+            
+            redrawAll();
+            
+            // Draw current path
+            if (currentPath.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(currentPath[0].x, currentPath[0].y);
+                for (let i = 1; i < currentPath.length; i++) {
+                    ctx.lineTo(currentPath[i].x, currentPath[i].y);
+                }
+                
+                if (currentMode === 'boundary') {
+                    ctx.strokeStyle = '#228B22';
+                    ctx.lineWidth = 3;
+                } else if (currentMode === 'pipeline') {
+                    ctx.strokeStyle = '#FF0000';
+                    ctx.lineWidth = 3;
+                } else if (currentMode === 'pond') {
+                    ctx.strokeStyle = '#0064FF';
+                    ctx.lineWidth = 3;
+                }
+                
+                ctx.stroke();
+            }
+        }
+        
+        function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            if (currentPath.length > 2) {
+                if (currentMode === 'boundary') {
+                    landBoundary = [...currentPath];
+                } else if (currentMode === 'pipeline') {
+                    pipelineAreas.push([...currentPath]);
+                } else if (currentMode === 'pond') {
+                    pondAreas.push([...currentPath]);
+                }
+            }
+            
+            currentPath = [];
+            redrawAll();
+            updateStats();
+        }
+        
+        function drawPolygon(points, fillColor, strokeColor, lineWidth = 2) {
+            if (points.length < 2) return;
+            
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            
+            ctx.closePath();
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = lineWidth;
+            ctx.stroke();
+        }
+        
+        function drawRect(x, y, width, height, fillColor, strokeColor) {
+            ctx.fillStyle = fillColor;
+            ctx.fillRect(x, y, width, height);
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, y, width, height);
+        }
+        
+        function isPointInPolygon(point, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                if (((polygon[i].y > point.y) !== (polygon[j].y > point.y)) &&
+                    (point.x < (polygon[j].x - polygon[i].x) * (point.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        
+        function isRectInExclusionZone(x, y, width, height) {
+            const corners = [
+                {x, y},
+                {x: x + width, y},
+                {x: x + width, y: y + height},
+                {x, y: y + height}
+            ];
+            
+            // Check if any corner is in pipeline or pond areas
+            for (let area of [...pipelineAreas, ...pondAreas]) {
+                for (let corner of corners) {
+                    if (isPointInPolygon(corner, area)) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+        
+        function calculatePolygonArea(polygon) {
+            let area = 0;
+            for (let i = 0; i < polygon.length; i++) {
+                let j = (i + 1) % polygon.length;
+                area += polygon[i].x * polygon[j].y;
+                area -= polygon[j].x * polygon[i].y;
+            }
+            return Math.abs(area) / 2;
+        }
+        
+        function generateSubdivision() {
+            if (landBoundary.length < 3) {
+                alert('Please draw the land boundary first!');
+                return;
+            }
+            
+            plots = [];
+            roads = [];
+            
+            const baseWidth = parseInt(document.getElementById('plotWidth').value);
+            const baseDepth = parseInt(document.getElementById('plotDepth').value);
+            const plotsPerRow = parseInt(document.getElementById('plotsPerRow').value);
+            const plotRows = parseInt(document.getElementById('plotRows').value);
+            
+            // Calculate residential plot dimensions (combination of base plots)
+            const residentialWidthFt = baseWidth * plotsPerRow;
+            const residentialDepthFt = baseDepth * plotRows;
+            
+            const plotWidthPx = feetToPixels(residentialWidthFt);
+            const plotDepthPx = feetToPixels(residentialDepthFt);
+            const roadWidthPx = feetToPixels(parseInt(document.getElementById('roadWidth').value));
+            const setbackPx = feetToPixels(parseInt(document.getElementById('setback').value));
+            
+            // Find bounding box of land boundary
+            let minX = Math.min(...landBoundary.map(p => p.x));
+            let maxX = Math.max(...landBoundary.map(p => p.x));
+            let minY = Math.min(...landBoundary.map(p => p.y));
+            let maxY = Math.max(...landBoundary.map(p => p.y));
+            
+            // Add setback
+            minX += setbackPx;
+            maxX -= setbackPx;
+            minY += setbackPx;
+            maxY -= setbackPx;
+            
+            // Calculate grid dimensions
+            const availableWidth = maxX - minX;
+            const availableHeight = maxY - minY;
+            
+            // Plan road network - main roads first
+            const mainRoadY = minY + availableHeight / 2;
+            roads.push({
+                x: minX,
+                y: mainRoadY - roadWidthPx / 2,
+                width: availableWidth,
+                height: roadWidthPx,
+                type: 'main'
+            });
+            
+            // Calculate how many residential plots fit per row
+            const residentialPlotsPerRow = Math.floor(availableWidth / (plotWidthPx + roadWidthPx));
+            
+            // Vertical connector roads between residential plots
+            for (let i = 1; i < residentialPlotsPerRow; i++) {
+                const roadX = minX + i * (plotWidthPx + roadWidthPx) - roadWidthPx / 2;
+                roads.push({
+                    x: roadX,
+                    y: minY,
+                    width: roadWidthPx,
+                    height: availableHeight,
+                    type: 'secondary'
+                });
+            }
+            
+            // Generate residential plots above and below main road
+            const plotRowHeight = plotDepthPx + roadWidthPx;
+            
+            // Plots above main road
+            for (let row = 0; row < Math.floor((mainRoadY - minY) / plotRowHeight); row++) {
+                const plotY = minY + row * plotRowHeight;
+                
+                for (let col = 0; col < residentialPlotsPerRow; col++) {
+                    const plotX = minX + col * (plotWidthPx + roadWidthPx);
+                    
+                    // Check if plot is within land boundary and not in exclusion zones
+                    if (isPointInPolygon({x: plotX + plotWidthPx/2, y: plotY + plotDepthPx/2}, landBoundary) &&
+                        !isRectInExclusionZone(plotX, plotY, plotWidthPx, plotDepthPx)) {
+                        
+                        plots.push({
+                            x: plotX,
+                            y: plotY,
+                            width: plotWidthPx,
+                            height: plotDepthPx,
+                            id: plots.length + 1,
+                            basePlotCount: plotsPerRow * plotRows,
+                            dimensions: `${residentialWidthFt}×${residentialDepthFt} ft`
+                        });
+                    }
+                }
+            }
+            
+            // Plots below main road
+            const belowStartY = mainRoadY + roadWidthPx;
+            for (let row = 0; row < Math.floor((maxY - belowStartY) / plotRowHeight); row++) {
+                const plotY = belowStartY + row * plotRowHeight;
+                
+                for (let col = 0; col < residentialPlotsPerRow; col++) {
+                    const plotX = minX + col * (plotWidthPx + roadWidthPx);
+                    
+                    // Check if plot is within land boundary and not in exclusion zones
+                    if (isPointInPolygon({x: plotX + plotWidthPx/2, y: plotY + plotDepthPx/2}, landBoundary) &&
+                        !isRectInExclusionZone(plotX, plotY, plotWidthPx, plotDepthPx)) {
+                        
+                        plots.push({
+                            x: plotX,
+                            y: plotY,
+                            width: plotWidthPx,
+                            height: plotDepthPx,
+                            id: plots.length + 1,
+                            basePlotCount: plotsPerRow * plotRows,
+                            dimensions: `${residentialWidthFt}×${residentialDepthFt} ft`
+                        });
+                    }
+                }
+            }
+            
+            redrawAll();
+            updateStats();
+        }
+        
+        function redrawAll() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            
+            // Draw land boundary
+            if (landBoundary.length > 2) {
+                drawPolygon(landBoundary, 'rgba(34, 139, 34, 0.3)', '#228B22', 3);
+            }
+            
+            // Draw pipeline areas
+            pipelineAreas.forEach(area => {
+                drawPolygon(area, 'rgba(255, 0, 0, 0.3)', '#FF0000', 2);
+            });
+            
+            // Draw pond areas
+            pondAreas.forEach(area => {
+                drawPolygon(area, 'rgba(0, 100, 255, 0.3)', '#0064FF', 2);
+            });
+            
+            // Draw roads
+            roads.forEach(road => {
+                drawRect(road.x, road.y, road.width, road.height, '#808080', '#696969');
+            });
+            
+            // Draw plots
+            plots.forEach(plot => {
+                drawRect(plot.x, plot.y, plot.width, plot.height, '#FFD700', '#DAA520');
+                
+                // Draw grid lines to show individual base plots within residential plot
+                const baseWidth = parseInt(document.getElementById('plotWidth').value);
+                const baseDepth = parseInt(document.getElementById('plotDepth').value);
+                const plotsPerRow = parseInt(document.getElementById('plotsPerRow').value);
+                const plotRows = parseInt(document.getElementById('plotRows').value);
+                
+                const baseWidthPx = feetToPixels(baseWidth);
+                const baseDepthPx = feetToPixels(baseDepth);
+                
+                // Draw vertical lines for base plots
+                ctx.strokeStyle = '#DAA520';
+                ctx.lineWidth = 1;
+                for (let i = 1; i < plotsPerRow; i++) {
+                    const lineX = plot.x + i * baseWidthPx;
+                    ctx.beginPath();
+                    ctx.moveTo(lineX, plot.y);
+                    ctx.lineTo(lineX, plot.y + plot.height);
+                    ctx.stroke();
+                }
+                
+                // Draw horizontal lines for base plots
+                for (let i = 1; i < plotRows; i++) {
+                    const lineY = plot.y + i * baseDepthPx;
+                    ctx.beginPath();
+                    ctx.moveTo(plot.x, lineY);
+                    ctx.lineTo(plot.x + plot.width, lineY);
+                    ctx.stroke();
+                }
+                
+                // Add plot number and info
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`R${plot.id}`, plot.x + plot.width/2, plot.y + plot.height/2 - 10);
+                
+                ctx.font = '10px Arial';
+                ctx.fillText(`${plot.basePlotCount} plots`, plot.x + plot.width/2, plot.y + plot.height/2 + 5);
+                ctx.fillText(plot.dimensions, plot.x + plot.width/2, plot.y + plot.height/2 + 18);
+            });
+        }
+        
+        function updateStats() {
+            let totalArea = 0;
+            let usableArea = 0;
+            let roadArea = 0;
+            
+            if (landBoundary.length > 2) {
+                totalArea = pixelsToAcres(calculatePolygonArea(landBoundary));
+            }
+            
+            // Calculate exclusion area
+            let exclusionArea = 0;
+            pipelineAreas.forEach(area => {
+                exclusionArea += pixelsToAcres(calculatePolygonArea(area));
+            });
+            pondAreas.forEach(area => {
+                exclusionArea += pixelsToAcres(calculatePolygonArea(area));
+            });
+            
+            // Calculate road area
+            roads.forEach(road => {
+                roadArea += pixelsToAcres(road.width * road.height);
+            });
+            
+            usableArea = totalArea - exclusionArea - roadArea;
+            
+            const efficiency = totalArea > 0 ? (usableArea / totalArea) * 100 : 0;
+            
+            // Calculate total base plots
+            const totalBasePlots = plots.reduce((sum, plot) => sum + plot.basePlotCount, 0);
+            
+            document.getElementById('totalArea').textContent = `${totalArea.toFixed(2)} acres`;
+            document.getElementById('usableArea').textContent = `${usableArea.toFixed(2)} acres`;
+            document.getElementById('totalPlots').textContent = `${plots.length} residential (${totalBasePlots} base plots)`;
+            document.getElementById('roadArea').textContent = `${roadArea.toFixed(2)} acres`;
+            document.getElementById('efficiency').textContent = `${efficiency.toFixed(1)}%`;
+        }
+    </script>
+</body>
+</html>
+
