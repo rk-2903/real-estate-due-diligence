@@ -1,5 +1,9 @@
 ## Project Overview
 
+This project introduces an AI-powered system to automate real estate layout planning using generative models, geospatial intelligence, and physics-based simulation. The system integrates satellite imagery, elevation data, and infrastructural constraints (e.g., roads, pipelines) to generate optimized land development layouts.
+We explore three approaches: (1) Generative AI for layout proposals, (2) physics-driven simulation using Pymunk and Pygame, and (3) rule-based plot generation using JavaScript. Each approach offers unique benefits and challenges. This work aims to enhance early-stage development due diligence through interactive, data-driven layout generation while paving the way for scalable AI-human collaboration in land planning.
+
+
 This repository contains real estate due diligence tools with two distinct approaches:
 
 1. **JavaScript Approach**: Web-based land subdivision planner (`Javascript-approach/real_estate.html`)
