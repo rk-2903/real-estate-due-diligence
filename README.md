@@ -97,3 +97,6 @@ Python simulations use these configurable parameters:
 - Right-click + drag: Move objects
 - 'D' key: Delete object under mouse (Python only)
 - Mode switching for different drawing tools (JavaScript only)
+
+### Project Poster and Demo Video
+- https://drive.google.com/drive/folders/147XQU_9MjO8MWWSWFxbFy8E5GuxZ12uG?usp=sharing
